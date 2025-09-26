@@ -38,7 +38,7 @@ export const calculatorToolDefinition: ToolDefinition = {
   },
 };
 
-export async function calculator(params: CalculatorParams): Promise<{ result: number }> {
+export async function calculatorTool(params: CalculatorParams): Promise<{ result: number }> {
   const { operation, a, b } = params;
 
   switch (operation) {
@@ -55,5 +55,12 @@ export async function calculator(params: CalculatorParams): Promise<{ result: nu
       return { result: a / b };
     default:
       throw new Error(`Unknown operation: ${operation}`);
+  }
+}
+
+export const calculator = () => {
+  return {
+    tool: calculatorTool,
+    definition: calculatorToolDefinition
   }
 }

@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
 
     const toolManager = new ToolManager();
     const tools = getAllTools();
-    const toolFunctions = getAllToolFunctions();
+    const toolFunctionsArray = getAllToolFunctions();
+    const toolFunctions = tools.reduce((acc, tool, index) => {
+      acc[tool.function.name] = toolFunctionsArray[index];
+      return acc;
+    }, {} as Record<string, Function>);
 
     // Register all tools
     tools.forEach(tool => toolManager.registerTool(tool));
@@ -46,6 +50,8 @@ export async function POST(request: NextRequest) {
     const responseMessage = completion.choices[0]?.message;
     let finalContent = responseMessage?.content || '';
 
+    const toolLogs: { name: string; arguments: any; result: string }[] = [];
+
     // Handle tool calls if present
     if (responseMessage?.tool_calls) {
       const toolCalls = responseMessage.tool_calls as ToolCall[];
@@ -54,6 +60,11 @@ export async function POST(request: NextRequest) {
       // Execute each tool call
       for (const toolCall of toolCalls) {
         const result = await toolManager.executeTool(toolCall, toolFunctions);
+        toolLogs.push({
+          name: toolCall.function.name,
+          arguments: toolCall.function.arguments,
+          result: result.content,
+        });
         toolResults.push(result);
       }
 
@@ -87,6 +98,7 @@ export async function POST(request: NextRequest) {
       response: finalContent,
       model: model,
       timestamp: new Date().toISOString(),
+      toolLogs,
     });
 
   } catch (error) {

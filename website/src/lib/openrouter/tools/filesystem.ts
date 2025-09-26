@@ -40,7 +40,7 @@ export const filesystemToolDefinition: ToolDefinition = {
   },
 };
 
-export async function filesystem(params: FileOperationParams): Promise<any> {
+export async function filesystemTool(params: FileOperationParams): Promise<any> {
   const { operation, path } = params;
   const fullPath = join(process.cwd(), path);
 
@@ -84,5 +84,11 @@ export async function filesystem(params: FileOperationParams): Promise<any> {
 
     default:
       throw new Error(`Unknown operation: ${operation}`);
+  }
+}
+export const filesystem = () => {
+  return {
+    tool: filesystemTool,
+    definition: filesystemToolDefinition
   }
 }

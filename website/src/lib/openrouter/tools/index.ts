@@ -6,17 +6,25 @@
 import { calculatorToolDefinition, calculator } from './calculator';
 import { filesystemToolDefinition, filesystem } from './filesystem';
 
-// Available tools registry
-export const availableTools = {
+
+const allTools = {
   calculator,
-  filesystem,
+  filesystem
 };
 
-export const toolDefinitions = [
-  calculatorToolDefinition,
-  filesystemToolDefinition,
-];
+const factories = Object.values(allTools);
 
+// Available tools registry
+export const availableTools = factories
+  .filter(f => f && typeof f === 'function')
+  .map(f => f().tool);
+
+// Tool definitions registry
+export const toolDefinitions = factories
+  .filter(f => f && typeof f === 'function')
+  .map(f => f().definition);
+
+// Helper function to get all tools as OpenRouter format
 // Helper function to get all tools as OpenRouter format
 export function getAllTools() {
   return toolDefinitions;
