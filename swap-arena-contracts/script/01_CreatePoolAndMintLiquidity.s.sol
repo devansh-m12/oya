@@ -30,7 +30,7 @@ contract CreatePoolAndAddLiquidityScript is Script, Constants, Config {
     uint160 startingPrice = 25052893676914917627943681377; // floor(sqrt(100000) * 2^96)
 
     // --- liquidity position configuration --- //
-    uint256 public token0Amount = 10000000e18;
+    uint256 public token0Amount = 1000e18;
     uint256 public token1Amount = 1000e18;
 
     // range of the position
@@ -82,6 +82,14 @@ contract CreatePoolAndAddLiquidityScript is Script, Constants, Config {
         uint256 valueToPass = currency0.isAddressZero() ? amount0Max : 0;
 
         vm.startBroadcast();
+
+        // Mint tokens to deployer
+        address deployer = 0x26d04a4c173b04a47Bb7ec74D3A2e97511aa7e26;
+        (bool success0,) = Currency.unwrap(currency0).call(abi.encodeWithSignature("mint(address,uint256)", deployer, token0Amount));
+        require(success0, "Mint token0 failed");
+        (bool success1,) = Currency.unwrap(currency1).call(abi.encodeWithSignature("mint(address,uint256)", deployer, token1Amount));
+        require(success1, "Mint token1 failed");
+
         tokenApprovals();
         vm.stopBroadcast();
 
