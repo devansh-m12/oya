@@ -1,11 +1,5 @@
 {
   "lib/forge-std": {
-    "tag": {
-      "name": "v1.10.0",
-      "rev": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
-    }
-  },
-  "lib/forge-std": {
     "rev": "6e05729b76f1ae0d437e74951aef1ca987788ab3"
   },
   "lib/uniswap-hooks": {
