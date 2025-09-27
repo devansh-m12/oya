@@ -8,8 +8,8 @@ import ChatPane from "./ChatPane"
 import GhostIconButton from "./GhostIconButton"
 import ThemeToggle from "./ThemeToggle"
 
-export default function AIAssistantUI({ persona = 'general' }) {
-  const [theme, setTheme] = useState("dark")
+export default function AIAssistantUI({ persona = 'general', name = '', image = '' }) {
+  const [theme, setTheme] = useState("default")
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -22,6 +22,8 @@ export default function AIAssistantUI({ persona = 'general' }) {
       const media = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)")
       if (media && media.matches) {
         setTheme("dark")
+      } else {
+        setTheme("default")
       }
     } catch {}
   }, [])
@@ -42,7 +44,7 @@ export default function AIAssistantUI({ persona = 'general' }) {
       if (!media) return
       const listener = (e) => {
         const saved = localStorage.getItem("theme")
-        if (!saved) setTheme("dark")
+        if (!saved) setTheme(e.matches ? "dark" : "default")
       }
       media.addEventListener("change", listener)
       return () => media.removeEventListener("change", listener)
@@ -373,10 +375,10 @@ export default function AIAssistantUI({ persona = 'general' }) {
   return (
     <div className="h-screen w-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <div className="md:hidden sticky top-0 z-40 flex items-center gap-2 border-b border-zinc-200/60 bg-white/80 px-3 py-2 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/70">
-        {persona === "casino-butler" ? (
-          <div className="ml-1 flex items-center gap-2 text-base font-semibold tracking-tight">
-            <img src="/butler.webp" alt="Casino Butler" className="h-10 w-10 rounded-full object-cover object-top" />
-            Casino Butler
+        {name ? (
+          <div className={`ml-1 flex items-center gap-2 text-${image ? "base" : "sm"} font-semibold tracking-tight`}>
+            {image && <img src={image} alt={name} className="h-10 w-10 rounded-full object-cover object-top" />}
+            {name}
           </div>
         ) : (
           <div className="ml-1 flex items-center gap-2 text-sm font-semibold tracking-tight">

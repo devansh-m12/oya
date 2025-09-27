@@ -3,9 +3,9 @@ import AIAssistantUI from "@/components/AIAssistantUI"
 export default function Page() {
   return (
     <AIAssistantUI
-      persona="casino-butler"
-      name="Casino Butler"
-      image="/butler.webp"
+      persona="kids"
+      name="Kids Assistant"
+      image=""
     />
   )
 }

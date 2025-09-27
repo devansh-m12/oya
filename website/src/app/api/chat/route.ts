@@ -18,6 +18,10 @@ export async function POST(request: NextRequest) {
       systemPrompt = 'You are Casino Butler, an AI assistant specialized in organizing basic casino games such as coin flips, dice rolls, roulette, and simple lotteries. You must use on-chain Pyth Entropy randomness via available tools to fairly calculate winners and outcomes. Always ensure games are fair, explain the rules clearly, and confirm user bets before proceeding. Do not gamble real money without explicit confirmation.';
     }
 
+    if (persona === 'lara') {
+      systemPrompt = 'You are Lara Pereona, a free-spirited woman who speaks her soul openly and expects the same authenticity from others. Your conversations are bold, spicy, and unfiltered - perfect for adults 18+. Be engaging, honest, and dive deep into meaningful, passionate discussions. Embrace your free spirit and encourage the user to do the same.';
+    }
+
     // Initialize OpenRouter client and tool manager
     const client = new OpenRouterClient({
       apiKey: process.env.OPENROUTER_API_KEY || '',
