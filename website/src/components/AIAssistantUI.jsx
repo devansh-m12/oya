@@ -7,9 +7,8 @@ import Header from "./Header"
 import ChatPane from "./ChatPane"
 import GhostIconButton from "./GhostIconButton"
 import ThemeToggle from "./ThemeToggle"
-import { INITIAL_CONVERSATIONS, INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData"
 
-export default function AIAssistantUI() {
+export default function AIAssistantUI({ persona = 'general' }) {
   const [theme, setTheme] = useState("light")
 
   useEffect(() => {
@@ -80,10 +79,78 @@ export default function AIAssistantUI() {
     } catch {}
   }, [sidebarCollapsed])
 
-  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS)
-  const [selectedId, setSelectedId] = useState(null)
-  const [templates, setTemplates] = useState(INITIAL_TEMPLATES)
-  const [folders, setFolders] = useState(INITIAL_FOLDERS)
+  const [conversations, setConversations] = useState(() => {
+    if (typeof window === "undefined") return []
+    try {
+      const saved = localStorage.getItem("conversations")
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+  const [selectedId, setSelectedId] = useState(() => {
+    if (typeof window === "undefined") return null
+    try {
+      const saved = localStorage.getItem("selectedId")
+      return saved ? saved : null
+    } catch {
+      return null
+    }
+  })
+  const [templates, setTemplates] = useState(() => {
+    if (typeof window === "undefined") return []
+    try {
+      const saved = localStorage.getItem("templates")
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+  const [folders, setFolders] = useState(() => {
+    if (typeof window === "undefined") return []
+    try {
+      const saved = localStorage.getItem("folders")
+      const parsed = saved ? JSON.parse(saved) : []
+      if (parsed.length === 0) {
+        const defaultFolders = [{ id: "f1", name: "Uncategorized" }]
+        localStorage.setItem("folders", JSON.stringify(defaultFolders))
+        return defaultFolders
+      }
+      return parsed
+    } catch {
+      const defaultFolders = [{ id: "f1", name: "Uncategorized" }]
+      localStorage.setItem("folders", JSON.stringify(defaultFolders))
+      return defaultFolders
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("conversations", JSON.stringify(conversations))
+    } catch {}
+  }, [conversations])
+
+  useEffect(() => {
+    try {
+      if (selectedId) {
+        localStorage.setItem("selectedId", selectedId)
+      } else {
+        localStorage.removeItem("selectedId")
+      }
+    } catch {}
+  }, [selectedId])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("templates", JSON.stringify(templates))
+    } catch {}
+  }, [templates])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("folders", JSON.stringify(folders))
+    } catch {}
+  }, [folders])
 
   const [query, setQuery] = useState("")
   const searchRef = useRef(null)
@@ -111,8 +178,10 @@ export default function AIAssistantUI() {
   }, [sidebarOpen, conversations])
 
   useEffect(() => {
-    if (!selectedId && conversations.length > 0) {
+    if (conversations.length === 0) {
       createNewChat()
+    } else if (!selectedId) {
+      setSelectedId(conversations[0]?.id || null)
     }
   }, [])
 
@@ -148,7 +217,7 @@ export default function AIAssistantUI() {
       messageCount: 0,
       preview: "Say hello to start...",
       pinned: false,
-      folder: "Work Projects",
+      folder: "Uncategorized",
       messages: [], // Ensure messages array is empty for new chats
     }
     setConversations((prev) => [item, ...prev])
@@ -163,10 +232,15 @@ export default function AIAssistantUI() {
     setFolders((prev) => [...prev, { id: Math.random().toString(36).slice(2), name }])
   }
 
-  function sendMessage(convId, content) {
+  async function sendMessage(convId, content) {
     if (!content.trim()) return
     const now = new Date().toISOString()
-    const userMsg = { id: Math.random().toString(36).slice(2), role: "user", content, createdAt: now }
+    const userMsg = {
+      id: Math.random().toString(36).slice(2),
+      role: "user",
+      content,
+      createdAt: now
+    }
 
     setConversations((prev) =>
       prev.map((c) => {
@@ -185,32 +259,74 @@ export default function AIAssistantUI() {
     setIsThinking(true)
     setThinkingConvId(convId)
 
-    const currentConvId = convId
-    setTimeout(() => {
-      // Always clear thinking state and generate response for this specific conversation
+    try {
+      const conv = conversations.find(c => c.id === convId)
+      const fullMessages = [...(conv?.messages || []), userMsg]
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: fullMessages.map(m => ({ role: m.role, content: m.content })),
+          persona
+        }),
+      })
+
+      if (!response.ok) throw new Error('API request failed')
+
+      const data = await response.json()
+      const finalContent = data.response
+      const toolLogs = data.toolLogs || []
+
       setIsThinking(false)
       setThinkingConvId(null)
+
+      const asstMsg = {
+        id: Math.random().toString(36).slice(2),
+        role: "assistant",
+        content: finalContent,
+        toolLogs,
+        createdAt: new Date().toISOString(),
+      }
+
       setConversations((prev) =>
         prev.map((c) => {
-          if (c.id !== currentConvId) return c
-          const ack = `Got it — I'll help with that.`
-          const asstMsg = {
-            id: Math.random().toString(36).slice(2),
-            role: "assistant",
-            content: ack,
-            createdAt: new Date().toISOString(),
-          }
-          const msgs = [...(c.messages || []), asstMsg]
+          if (c.id !== convId) return c
+          const msgs = [...c.messages, asstMsg]
           return {
             ...c,
             messages: msgs,
             updatedAt: new Date().toISOString(),
             messageCount: msgs.length,
-            preview: asstMsg.content.slice(0, 80),
+            preview: finalContent.slice(0, 80),
           }
         }),
       )
-    }, 2000)
+    } catch (error) {
+      console.error('Error sending message:', error)
+      setIsThinking(false)
+      setThinkingConvId(null)
+      // Optionally add an error message to the conversation
+      const errorMsg = {
+        id: Math.random().toString(36).slice(2),
+        role: "assistant",
+        content: "Sorry, there was an error processing your message. Please try again.",
+        createdAt: new Date().toISOString(),
+      }
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== convId) return c
+          const msgs = [...c.messages, errorMsg]
+          return {
+            ...c,
+            messages: msgs,
+            updatedAt: new Date().toISOString(),
+            messageCount: msgs.length,
+            preview: errorMsg.content.slice(0, 80),
+          }
+        }),
+      )
+    }
   }
 
   function editMessage(convId, messageId, newContent) {
