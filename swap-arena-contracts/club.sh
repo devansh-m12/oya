@@ -1,0 +1,1 @@
+forge script script/03_Swap.s.sol --broadcast --rpc-url https://mainnet.base.org --private-key $PRIVATE_KEY
