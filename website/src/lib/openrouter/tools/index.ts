@@ -5,13 +5,15 @@
 
 import { calculatorToolDefinition, calculator } from './calculator';
 import { filesystemToolDefinition, filesystem } from './filesystem';
+import { randomToolDefinition, random } from './random';
+
 
 
 const allTools = {
   calculator,
-  filesystem
+  filesystem,
+  random
 };
-
 const factories = Object.values(allTools);
 
 // Available tools registry
