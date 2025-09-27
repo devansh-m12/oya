@@ -136,7 +136,6 @@ const ChatPane = forwardRef(function ChatPane(
                     content={m.content}
                     toolLogs={m.role === "assistant" ? (m.toolLogs || []) : []}
                   >
-                    <div className="whitespace-pre-wrap">{m.content}</div>
                     {m.role === "user" && (
                       <div className="mt-1 flex gap-2 text-[11px] text-zinc-500">
                         <button className="inline-flex items-center gap-1 hover:underline" onClick={() => startEdit(m)}>

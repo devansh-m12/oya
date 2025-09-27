@@ -1,4 +1,5 @@
 import { useState } from "react"
+import ReactMarkdown from "react-markdown"
 import { cls } from "./utils"
 
 export default function Message({ role, content, toolLogs, children }) {
@@ -37,7 +38,9 @@ export default function Message({ role, content, toolLogs, children }) {
             </button>
           </div>
           <div className={activeTab === "response" ? "block" : "hidden"}>
-            <div className="whitespace-pre-wrap">{content || children}</div>
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{content}</ReactMarkdown>
+            </div>
           </div>
           <div className={activeTab === "tools" ? "block" : "hidden"}>
             <div className="space-y-4">
@@ -60,7 +63,13 @@ export default function Message({ role, content, toolLogs, children }) {
         </div>
       )
     }
-    return <div className="whitespace-pre-wrap">{content || children}</div>
+    return isUser ? (
+      <div className="whitespace-pre-wrap">{content}</div>
+    ) : (
+      <div className="prose prose-sm max-w-none dark:prose-invert">
+        <ReactMarkdown>{content}</ReactMarkdown>
+      </div>
+    )
   }
 
   return (
@@ -79,6 +88,7 @@ export default function Message({ role, content, toolLogs, children }) {
         )}
       >
         {renderContent()}
+        {children}
       </div>
       {isUser && (
         <div className="mt-0.5 grid h-7 w-7 place-items-center rounded-full bg-zinc-900 text-[10px] font-bold text-white dark:bg-white dark:text-zinc-900">
