@@ -9,7 +9,7 @@ import GhostIconButton from "./GhostIconButton"
 import ThemeToggle from "./ThemeToggle"
 
 export default function AIAssistantUI({ persona = 'general' }) {
-  const [theme, setTheme] = useState("light")
+  const [theme, setTheme] = useState("dark")
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -42,7 +42,7 @@ export default function AIAssistantUI({ persona = 'general' }) {
       if (!media) return
       const listener = (e) => {
         const saved = localStorage.getItem("theme")
-        if (!saved) setTheme(e.matches ? "dark" : "light")
+        if (!saved) setTheme("dark")
       }
       media.addEventListener("change", listener)
       return () => media.removeEventListener("change", listener)
