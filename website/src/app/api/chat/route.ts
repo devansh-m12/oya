@@ -4,13 +4,18 @@ import { getAllTools, getAllToolFunctions } from '@/lib/openrouter/tools';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, model = 'x-ai/grok-4-fast:free' } = await request.json();
+    const { messages, persona = 'general', model = 'x-ai/grok-4-fast:free' } = await request.json();
 
-    if (!message) {
+    if (!messages || messages.length === 0) {
       return NextResponse.json(
-        { error: 'Message is required' },
+        { error: 'Messages are required' },
         { status: 400 }
       );
+    }
+
+    let systemPrompt = 'You are a helpful AI assistant with access to various tools. Use tools when appropriate to help the user.';
+    if (persona === 'casino-butler') {
+      systemPrompt = 'You are Casino Butler, an AI assistant specialized in organizing basic casino games such as coin flips, dice rolls, roulette, and simple lotteries. You must use on-chain Pyth Entropy randomness via available tools to fairly calculate winners and outcomes. Always ensure games are fair, explain the rules clearly, and confirm user bets before proceeding. Do not gamble real money without explicit confirmation.';
     }
 
     // Initialize OpenRouter client and tool manager
@@ -30,18 +35,15 @@ export async function POST(request: NextRequest) {
     // Register all tools
     tools.forEach(tool => toolManager.registerTool(tool));
 
-    // Initial chat completion request
+    // Initial chat completion request with full conversation history
     const completion = await client.chatCompletion({
       model,
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful AI assistant with access to various tools. Use tools when appropriate to help the user.',
+          content: systemPrompt,
         },
-        {
-          role: 'user',
-          content: message,
-        },
+        ...messages,
       ],
       tools: tools,
       temperature: 0.7,
@@ -74,12 +76,9 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful AI assistant with access to various tools. Use tools when appropriate to help the user.',
+            content: systemPrompt,
           },
-          {
-            role: 'user',
-            content: message,
-          },
+          ...messages,
           responseMessage,
           ...toolResults.map(result => ({
             role: 'tool' as const,
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
         tools: tools,
         temperature: 0.7,
       });
-
+  
       finalContent = finalCompletion.choices[0]?.message?.content || finalContent;
     }
 

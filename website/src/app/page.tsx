@@ -1,119 +1,21 @@
-'use client';
-
-import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2 } from 'lucide-react';
-
-type Message = {
-  role: 'user' | 'assistant';
-  content: string;
-};
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMsg: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
-    const currentInput = input;
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: currentInput }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to send message');
-      }
-
-      const data = await res.json();
-      const assistantMsg: Message = { role: 'assistant', content: data.response || 'Sorry, I could not process that.' };
-      setMessages(prev => [...prev, assistantMsg]);
-    } catch (err) {
-      console.error(err);
-      const errorMsg: Message = { role: 'assistant', content: 'An error occurred while processing your message.' };
-      setMessages(prev => [...prev, errorMsg]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
   return (
-    <div className="flex flex-col h-screen bg-white">
-      {/* Header */}
-      <header className="bg-black text-white p-6 flex items-center justify-center border-b border-gray-200 shadow-sm">
-        <h1 className="text-2xl font-semibold">Chat Assistant</h1>
-      </header>
-
-      {/* Messages Area */}
-      <main className="flex-1 p-6 overflow-hidden">
-        <ScrollArea className="h-full pr-4">
-          <div className="space-y-6 mb-6">
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] px-6 py-4 rounded-2xl shadow-md ${
-                  msg.role === 'user' 
-                    ? 'bg-black text-white ml-8' 
-                    : 'bg-gray-100 text-gray-900 mr-8'
-                } whitespace-pre-wrap break-words`}>
-                  <p className="text-sm leading-relaxed">{msg.content}</p>
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%] px-6 py-4 rounded-2xl bg-gray-100 text-gray-900 mr-8">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <p className="text-sm">Assistant is typing...</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      </main>
-
-      {/* Input Area */}
-      <footer className="bg-gray-50 p-6 border-t border-gray-200">
-        <div className="flex gap-3 max-w-4xl mx-auto">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Type your message here..."
-            className="flex-1 min-h-[50px] resize-none rounded-xl border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
-            disabled={isLoading}
-          />
-          <Button 
-            onClick={sendMessage} 
-            disabled={!input.trim() || isLoading}
-            className="bg-black hover:bg-gray-800 text-white rounded-xl px-8 h-[50px] shadow-md"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : null}
-            Send
-          </Button>
+    <div className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div className="text-center max-w-md">
+        <h1 className="text-4xl font-bold text-black mb-4">Welcome to Oya</h1>
+        <p className="text-gray-600 mb-8">Multi-persona AI assistant platform with on-chain capabilities.</p>
+        <div className="space-y-4">
+          <Link href="/testChat">
+            <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-xl text-lg w-full">
+              Start Casino Butler Chat
+            </Button>
+          </Link>
+          <p className="text-sm text-gray-500">Connect your wallet and experience fair on-chain games.</p>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
