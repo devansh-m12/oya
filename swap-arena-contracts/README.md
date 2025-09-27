@@ -63,7 +63,6 @@ chmod +x deploy.sh
 ### 3. Other Scripts
 - `add.sh`: Add liquidity.
 - `swap.sh`: Perform test swaps to trigger quests.
-- `club.sh`: Related to BexClub integration (see `src/BexClub.sol`).
 
 ## How SwapArena Works: Simple Explanation by Scenario
 
@@ -142,7 +141,7 @@ flowchart TD
 
 ## Testing
 - Run `forge test` for unit tests (`test/SwapArena.t.sol`).
-- Use `script/Anvil.s.sol` for local fork.
+- Run Anvil for local fork: `anvil --fork-url https://sepolia.base.org`.
 - Mock swaps via `script/03_Swap.s.sol`.
 
 ## Future Improvements
