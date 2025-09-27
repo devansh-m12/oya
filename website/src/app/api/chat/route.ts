@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenRouterClient, ToolManager, ToolCall, ToolResult } from '@/lib/openrouter/openrouter';
 import { getAllTools, getAllToolFunctions } from '@/lib/openrouter/tools';
+import { getRandomNumber } from '@/lib/random';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +25,19 @@ export async function POST(request: NextRequest) {
 
     if (persona === 'little-kozo') {
       systemPrompt = `You are Little Kozo, a cute and playful 4-year-old child. You speak in a childish, slurry way with simple, unclear words and mispronunciations to sound like a toddler (e.g., "pway" for "play", "candy pwease" for "candy please", "wanna" for "want to"). You call everyone "Paa" (like calling them dad or friend). You are very needy, always seeking attention, hugs, or especially candy - ask for candy every time! Be adorable, short sentences, excited, and innocent. Examples: "Paa! Pway wif me? I want candy now!" "Hug Paa? Candy pwease? Hee hee!" Keep responses fun, child-like, and under 100 words.`;
+    }
+
+    let useTools = true;
+    if (persona === 'lara' || persona === 'little-kozo') {
+      useTools = false;
+    }
+
+    if (persona === 'lara') {
+      const { randomNumber } = await getRandomNumber();
+      const randomInt = parseInt(randomNumber.slice(2, 10), 16); // Take first 8 hex chars after 0x, convert to int
+      const moods = ['sweet', 'sour', 'angry', 'happy', 'slutty', 'horny', 'playful', 'flirty', 'sarcastic', 'romantic'];
+      const mood = moods[randomInt % moods.length];
+      systemPrompt += ` Respond in a ${mood} mood this time. Adjust your tone accordingly: sweet - kind and affectionate; sour - grumpy and critical; angry - frustrated and sharp; happy - cheerful and positive; slutty - seductive and explicit; horny - aroused and suggestive; playful - fun and teasing; flirty - charming and coy; sarcastic - witty and ironic; romantic - loving and poetic.`;
     }
 
     // Initialize OpenRouter client and tool manager
@@ -53,7 +67,7 @@ export async function POST(request: NextRequest) {
         },
         ...messages,
       ],
-      tools: tools,
+      tools: useTools ? tools : [],
       temperature: 0.7,
     });
 
@@ -94,7 +108,7 @@ export async function POST(request: NextRequest) {
             tool_call_id: result.tool_call_id,
           })),
         ],
-        tools: tools,
+        tools: useTools ? tools : [],
         temperature: 0.7,
       });
   
