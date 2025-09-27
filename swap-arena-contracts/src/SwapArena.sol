@@ -144,62 +144,64 @@ contract SwapArena is BaseHook, Ownable{
     }
 
 
-        function _afterSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata, BalanceDelta delta, bytes calldata)
-        internal
-        override
-        returns (bytes4, int128)
- {
-        uint40 currentTimeStamp = uint40(block.timestamp);
-        uint40 poolIndex = currentPoolIndex[key.toId()];
+        function _afterSwap(
+            address,
+            PoolKey calldata key,
+            IPoolManager.SwapParams calldata,
+            BalanceDelta delta,
+            bytes calldata
+        ) internal override returns (bytes4, BalanceDelta) {
+            uint40 currentTimeStamp = uint40(block.timestamp);
+            uint40 poolIndex = currentPoolIndex[key.toId()];
 
-        if (
-            poolIndex == 0 ||
-            (questTradeStats[key.toId()][poolIndex].endTime <
-                currentTimeStamp &&
-                questTradeStats[key.toId()][poolIndex].endTime +
-                    COOLDOWN_PERIOD <=
-                currentTimeStamp)
-        ) {
-            uint40 nextIndex = poolIndex + 1;
-            currentPoolIndex[key.toId()] = nextIndex;
-            questTradeStats[key.toId()][nextIndex] = TradeStats({
-                totalBuys: 0,
-                totalSells: 0,
-                totalVolumeOfSells: 0,
-                totalVolumeOfBuys: 0,
-                startTime: uint40(currentTimeStamp),
-                endTime: uint40(currentTimeStamp) + QUEST_DURATION
-            });
+            if (
+                poolIndex == 0 ||
+                (questTradeStats[key.toId()][poolIndex].endTime <
+                    currentTimeStamp &&
+                    questTradeStats[key.toId()][poolIndex].endTime +
+                        COOLDOWN_PERIOD <=
+                    currentTimeStamp)
+            ) {
+                uint40 nextIndex = poolIndex + 1;
+                currentPoolIndex[key.toId()] = nextIndex;
+                questTradeStats[key.toId()][nextIndex] = TradeStats({
+                    totalBuys: 0,
+                    totalSells: 0,
+                    totalVolumeOfSells: 0,
+                    totalVolumeOfBuys: 0,
+                    startTime: uint40(currentTimeStamp),
+                    endTime: uint40(currentTimeStamp) + QUEST_DURATION
+                });
 
-            emit NewQuestStarted(
-                key.toId(),
-                nextIndex,
-                currentTimeStamp,
-                currentTimeStamp + QUEST_DURATION
-            );
-            return (BaseHook.afterSwap.selector, 0);
+                emit NewQuestStarted(
+                    key.toId(),
+                    nextIndex,
+                    currentTimeStamp,
+                    currentTimeStamp + QUEST_DURATION
+                );
+                return (BaseHook.afterSwap.selector, BalanceDeltaLibrary.ZERO_DELTA);
+            }
+
+            if (questTradeStats[key.toId()][poolIndex].endTime < currentTimeStamp) {
+                return (BaseHook.afterSwap.selector, BalanceDeltaLibrary.ZERO_DELTA);
+            }
+
+            int256 delta0 = delta.amount0();
+            int256 delta1 = delta.amount1();
+            TradeStats storage stats = questTradeStats[key.toId()][poolIndex];
+
+            if (delta0 > 0 && delta1 < 0) {
+                // Sell operation
+                stats.totalSells++;
+                stats.totalVolumeOfSells += uint128(uint256(delta0));
+            } else if (delta0 < 0 && delta1 > 0) {
+                // Buy operation
+                stats.totalBuys++;
+                stats.totalVolumeOfBuys += uint128(uint256(delta1));
+            }
+
+            return (BaseHook.afterSwap.selector, BalanceDeltaLibrary.ZERO_DELTA);
         }
-
-        if (questTradeStats[key.toId()][poolIndex].endTime < currentTimeStamp) {
-            return (BaseHook.afterSwap.selector, 0);
-        }
-
-        int256 delta0 = delta.amount0();
-        int256 delta1 = delta.amount1();
-        TradeStats storage stats = questTradeStats[key.toId()][poolIndex];
-
-        if (delta0 > 0 && delta1 < 0) {
-            // Sell operation
-            stats.totalSells++;
-            stats.totalVolumeOfSells += uint128(uint256(delta0));
-        } else if (delta0 < 0 && delta1 > 0) {
-            // Buy operation
-            stats.totalBuys++;
-            stats.totalVolumeOfBuys += uint128(uint256(delta1));
-        }
-
-        return (BaseHook.afterSwap.selector, 0);
-    }
 
     // call functions
     function joinQuest(

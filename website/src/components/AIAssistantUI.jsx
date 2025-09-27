@@ -10,13 +10,22 @@ import ThemeToggle from "./ThemeToggle"
 import { INITIAL_CONVERSATIONS, INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData"
 
 export default function AIAssistantUI() {
-  const [theme, setTheme] = useState(() => {
-    const saved = typeof window !== "undefined" && localStorage.getItem("theme")
-    if (saved) return saved
-    if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-      return "dark"
-    return "light"
-  })
+  const [theme, setTheme] = useState("light")
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      const saved = localStorage.getItem("theme")
+      if (saved) {
+        setTheme(saved)
+        return
+      }
+      const media = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)")
+      if (media && media.matches) {
+        setTheme("dark")
+      }
+    } catch {}
+  }, [])
 
   useEffect(() => {
     try {

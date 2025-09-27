@@ -36,13 +36,17 @@ contract Swapper is IUnlockCallback {
 
         // Settle negative deltas (pay)
         if (amount0 < 0) {
+            Currency input0 = key.currency0;
+            poolManager.sync(input0);
             int256 pay0 = -int256(amount0);
-            CurrencyLibrary.transfer(key.currency0, address(poolManager), uint256(pay0));
+            CurrencyLibrary.transfer(input0, address(poolManager), uint256(pay0));
             poolManager.settle();
         }
         if (amount1 < 0) {
+            Currency input1 = key.currency1;
+            poolManager.sync(input1);
             int256 pay1 = -int256(amount1);
-            CurrencyLibrary.transfer(key.currency1, address(poolManager), uint256(pay1));
+            CurrencyLibrary.transfer(input1, address(poolManager), uint256(pay1));
             poolManager.settle();
         }
 
