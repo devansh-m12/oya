@@ -84,7 +84,8 @@ export default function AIAssistantUI({ persona = 'general', name = '', image = 
   const [conversations, setConversations] = useState(() => {
     if (typeof window === "undefined") return []
     try {
-      const saved = localStorage.getItem("conversations")
+      const key = `conversations_${persona}`;
+      const saved = localStorage.getItem(key)
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
@@ -93,7 +94,8 @@ export default function AIAssistantUI({ persona = 'general', name = '', image = 
   const [selectedId, setSelectedId] = useState(() => {
     if (typeof window === "undefined") return null
     try {
-      const saved = localStorage.getItem("selectedId")
+      const key = `selectedId_${persona}`;
+      const saved = localStorage.getItem(key)
       return saved ? saved : null
     } catch {
       return null
@@ -128,19 +130,21 @@ export default function AIAssistantUI({ persona = 'general', name = '', image = 
 
   useEffect(() => {
     try {
-      localStorage.setItem("conversations", JSON.stringify(conversations))
+      const key = `conversations_${persona}`;
+      localStorage.setItem(key, JSON.stringify(conversations))
     } catch {}
-  }, [conversations])
+  }, [conversations, persona])
 
   useEffect(() => {
     try {
+      const key = `selectedId_${persona}`;
       if (selectedId) {
-        localStorage.setItem("selectedId", selectedId)
+        localStorage.setItem(key, selectedId)
       } else {
-        localStorage.removeItem("selectedId")
+        localStorage.removeItem(key)
       }
     } catch {}
-  }, [selectedId])
+  }, [selectedId, persona])
 
   useEffect(() => {
     try {
@@ -428,7 +432,7 @@ export default function AIAssistantUI({ persona = 'general', name = '', image = 
         />
 
         <main className="relative flex min-w-0 flex-1 flex-col">
-          <Header createNewChat={createNewChat} sidebarCollapsed={sidebarCollapsed} setSidebarOpen={setSidebarOpen} persona={persona} />
+          <Header createNewChat={createNewChat} sidebarCollapsed={sidebarCollapsed} setSidebarOpen={setSidebarOpen} persona={persona} name={name} image={image} />
           <ChatPane
             ref={composerRef}
             conversation={selected}

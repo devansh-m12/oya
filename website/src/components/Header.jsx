@@ -1,11 +1,30 @@
 "use client"
+
 import { Asterisk, MoreHorizontal, Menu, ChevronDown } from "lucide-react"
+
 import { useState } from "react"
+
 import GhostIconButton from "./GhostIconButton"
 
-export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen, persona }) {
+export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen, persona, name, image }) {
   const [selectedBot, setSelectedBot] = useState("GPT-5")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const personas = [
+    {
+      name: "Casino Butler",
+      image: "/butler.webp",
+      path: "/butler",
+      description: "Professional gambler guide"
+    },
+    {
+      name: "Lara Pereona",
+      image: "/lara.jpeg",
+      path: "/lara",
+      description: "Free spirit conversations"
+    },
+    // Add more personas as needed
+  ];
 
   const chatbots = [
     { name: "GPT-5", icon: "🤖" },
@@ -26,10 +45,37 @@ export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen
         </button>
       )}
 
-      {persona === "casino-butler" ? (
-        <div className="hidden md:flex items-center gap-3">
-          <img src="/butler.webp" alt="Casino Butler" className="h-10 w-10 rounded-full object-cover object-top" />
-          <span className="text-xl font-semibold tracking-tight">Casino Butler</span>
+      {name ? (
+        <div className="hidden md:flex relative items-center gap-3">
+          <img src={image} alt={name} className="h-10 w-10 rounded-full object-cover object-top" />
+          <span className="text-xl font-semibold tracking-tight">{name}</span>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="ml-2 inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold tracking-tight hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-800"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+
+          {isDropdownOpen && (
+            <div className="absolute top-full left-0 mt-1 w-64 rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950 z-50">
+              {personas.map((p) => (
+                <button
+                  key={p.path}
+                  onClick={() => {
+                    window.open(p.path, '_blank');
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg"
+                >
+                  <img src={p.image} alt={p.name} className="h-8 w-8 rounded-full object-cover" />
+                  <div>
+                    <div className="font-medium">{p.name}</div>
+                    <div className="text-xs text-zinc-500">{p.description}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         <div className="hidden md:flex relative">

@@ -97,10 +97,10 @@ export const PersonaCard = ({
             })}
           </div>
           <Button asChild className="group bg-black hover:bg-gray-900 text-white border border-gray-800 shadow-lg">
-            <Link href={link} className="flex items-center">
+            <a href={link} target="_blank" rel="noopener noreferrer" className="flex items-center">
               Start Chat
               <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
-            </Link>
+            </a>
           </Button>
         </div>
       </motion.div>

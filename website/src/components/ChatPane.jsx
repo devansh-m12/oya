@@ -77,6 +77,10 @@ const ChatPane = forwardRef(function ChatPane(
       {persona === "casino-butler" && (
         <div className="absolute inset-0 bg-[url('/butler.webp')] bg-no-repeat bg-cover bg-top opacity-20 z-0" />
       )}
+      {persona === "lara" && (
+        <div className="absolute inset-0 bg-[url('/lara.jpeg')] bg-no-repeat bg-cover bg-top opacity-20 z-0" />
+      )}
+
       <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-8 relative z-10">
         <div className="mb-2 text-3xl font-serif tracking-tight sm:text-4xl md:text-5xl relative z-10">
           <span className="block leading-[1.05] font-sans text-2xl">{conversation.title}</span>
