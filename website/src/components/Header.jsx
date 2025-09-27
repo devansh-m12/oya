@@ -23,6 +23,12 @@ export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen
       path: "/lara",
       description: "Free spirit conversations"
     },
+    {
+      name: "Little Kozo",
+      image: "/little_kozo.jpeg",
+      path: "/little-kozo",
+      description: "Playful little kozo companion"
+    },
     // Add more personas as needed
   ];
 

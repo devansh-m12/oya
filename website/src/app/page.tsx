@@ -69,6 +69,20 @@ export default function Home() {
           description="A free spirit who speaks her soul and expects you to do the same. Engage in spicy, authentic conversations."
           link="/lara"
         />
+
+        {/* Little Kozo Card */}
+        <PersonaCard
+          image="/little_kozo.jpeg"
+          tags={[
+            { label: 'Childish', color: 'pink' },
+            { label: 'Cute', color: 'yellow' },
+            { label: 'Playful', color: 'orange' }
+          ]}
+          rating={{ label: 'Kids', color: 'blue' }}
+          title="Little Kozo"
+          description="A cute 4-year-old kid who speaks in a slurry, childish way. Always needy for attention and candy, calls everyone 'Paa'."
+          link="/little-kozo"
+        />
       </div>
     </div>
   );
