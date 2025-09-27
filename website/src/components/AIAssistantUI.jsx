@@ -373,9 +373,16 @@ export default function AIAssistantUI({ persona = 'general' }) {
   return (
     <div className="h-screen w-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <div className="md:hidden sticky top-0 z-40 flex items-center gap-2 border-b border-zinc-200/60 bg-white/80 px-3 py-2 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/70">
-        <div className="ml-1 flex items-center gap-2 text-sm font-semibold tracking-tight">
-          <span className="inline-flex h-4 w-4 items-center justify-center">✱</span> AI Assistant
-        </div>
+        {persona === "casino-butler" ? (
+          <div className="ml-1 flex items-center gap-2 text-base font-semibold tracking-tight">
+            <img src="/butler.webp" alt="Casino Butler" className="h-10 w-10 rounded-full object-cover object-top" />
+            Casino Butler
+          </div>
+        ) : (
+          <div className="ml-1 flex items-center gap-2 text-sm font-semibold tracking-tight">
+            <span className="inline-flex h-4 w-4 items-center justify-center">✱</span> AI Assistant
+          </div>
+        )}
         <div className="ml-auto flex items-center gap-2">
           <GhostIconButton label="Schedule">
             <Calendar className="h-4 w-4" />
@@ -419,7 +426,7 @@ export default function AIAssistantUI({ persona = 'general' }) {
         />
 
         <main className="relative flex min-w-0 flex-1 flex-col">
-          <Header createNewChat={createNewChat} sidebarCollapsed={sidebarCollapsed} setSidebarOpen={setSidebarOpen} />
+          <Header createNewChat={createNewChat} sidebarCollapsed={sidebarCollapsed} setSidebarOpen={setSidebarOpen} persona={persona} />
           <ChatPane
             ref={composerRef}
             conversation={selected}
@@ -428,6 +435,7 @@ export default function AIAssistantUI({ persona = 'general' }) {
             onResendMessage={(messageId) => selected && resendMessage(selected.id, messageId)}
             isThinking={isThinking && thinkingConvId === selected?.id}
             onPauseThinking={pauseThinking}
+            persona={persona}
           />
         </main>
       </div>

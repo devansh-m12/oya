@@ -28,7 +28,7 @@ function ThinkingMessage({ onPause }) {
 }
 
 const ChatPane = forwardRef(function ChatPane(
-  { conversation, onSend, onEditMessage, onResendMessage, isThinking, onPauseThinking },
+  { conversation, onSend, onEditMessage, onResendMessage, isThinking, onPauseThinking, persona },
   ref,
 ) {
   const [editingId, setEditingId] = useState(null)
@@ -73,16 +73,19 @@ const ChatPane = forwardRef(function ChatPane(
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-8">
-        <div className="mb-2 text-3xl font-serif tracking-tight sm:text-4xl md:text-5xl">
+    <div className="flex h-full min-h-0 flex-1 flex-col relative">
+      {persona === "casino-butler" && (
+        <div className="absolute inset-0 bg-[url('/butler.webp')] bg-no-repeat bg-cover bg-top opacity-20 z-0" />
+      )}
+      <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-8 relative z-10">
+        <div className="mb-2 text-3xl font-serif tracking-tight sm:text-4xl md:text-5xl relative z-10">
           <span className="block leading-[1.05] font-sans text-2xl">{conversation.title}</span>
         </div>
-        <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+        <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400 relative z-10">
           Updated {timeAgo(conversation.updatedAt)} · {count} messages
         </div>
 
-        <div className="mb-6 flex flex-wrap gap-2 border-b border-zinc-200 pb-5 dark:border-zinc-800">
+        <div className="mb-6 flex flex-wrap gap-2 border-b border-zinc-200 pb-5 dark:border-zinc-800 relative z-10">
           {tags.map((t) => (
             <span
               key={t}
@@ -94,13 +97,13 @@ const ChatPane = forwardRef(function ChatPane(
         </div>
 
         {messages.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+          <div className="rounded-xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400 relative z-10">
             No messages yet. Say hello to start.
           </div>
         ) : (
           <>
             {messages.map((m) => (
-              <div key={m.id} className="space-y-2">
+              <div key={m.id} className="space-y-2 relative z-10">
                 {editingId === m.id ? (
                   <div className={cls("rounded-2xl border p-2", "border-zinc-200 dark:border-zinc-800")}>
                     <textarea
