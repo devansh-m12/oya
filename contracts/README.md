@@ -1,66 +1,20 @@
-## Foundry
+# Pyth Entropy Random Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This Foundry project deploys a smart contract using Pyth Network's Entropy for on-chain randomness.
 
-Foundry consists of:
+## Deployed Contract
+- **Address**: `0xC076fF703dAba7f183b747EC3F81D0b9803B0F27`
+- **Network**: Optimism Sepolia
+- **Explorer**: [Entropy Explorer](https://entropy-explorer.pyth.network/?chain=all-testnet&search=5674)
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
+## Setup
+1. Install dependencies: `npm install`
+2. Configure `.env` with `RPC_URL` and `PRIVATE_KEY`
 
 ## Usage
+- Build: `forge build`
+- Test randomness: `npx ts-node scripts/test-random.ts`
+- Deploy: `forge script script/RandomNumber.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast`
 
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+## Contract
+See [`src/Random.sol`](src/Random.sol) for the implementation.
