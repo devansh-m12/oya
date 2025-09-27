@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { sepolia } from 'wagmi/chains';
+import { baseSepolia } from 'wagmi/chains';
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { lightTheme } from '@rainbow-me/rainbowkit';
@@ -11,9 +11,9 @@ import { lightTheme } from '@rainbow-me/rainbowkit';
 const queryClient = new QueryClient();
 
 const config = createConfig({
-  chains: [sepolia],
+  chains: [baseSepolia],
   transports: {
-    [sepolia.id]: http(),
+    [baseSepolia.id]: http(),
   },
   connectors: [
     injected({ target: 'metaMask' }),
@@ -26,8 +26,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
-          initialChain={sepolia}
-          theme={lightTheme()}
+          initialChain={baseSepolia}
+          theme={lightTheme({
+            accentColor: '#3b82f6',
+          })}
         >
           {children}
         </RainbowKitProvider>

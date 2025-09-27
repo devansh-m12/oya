@@ -120,3 +120,52 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* RainbowKit Custom Styles */
+@import '@rainbow-me/rainbowkit/styles.css';
+
+/* Override defaults to match app theme */
+.rk {
+  --rk-colors-primary: hsl(var(--primary));
+  --rk-colors-secondary: hsl(var(--secondary));
+  --rk-colors-accent: hsl(var(--accent));
+  --rk-colors-accentColor: hsl(var(--primary));
+  --rk-colors-accentColorForeground: hsl(var(--primary-foreground));
+  --rk-colors-background: hsl(var(--background));
+  --rk-colors-backgroundSecondary: hsl(var(--secondary));
+  --rk-colors-foreground: hsl(var(--foreground));
+  --rk-colors-muted: hsl(var(--muted));
+  --rk-colors-mutedForeground: hsl(var(--muted-foreground));
+  --rk-colors-border: hsl(var(--border));
+  --rk-colors-input: hsl(var(--input));
+  --rk-colors-ring: hsl(var(--ring));
+  --rk-radius: var(--radius);
+  font-family: var(--font-sans);
+}
+
+.dark .rk {
+  --rk-colors-primary: hsl(var(--primary));
+  --rk-colors-secondary: hsl(var(--secondary));
+  --rk-colors-accent: hsl(var(--accent));
+  --rk-colors-accentColor: hsl(var(--primary));
+  --rk-colors-accentColorForeground: hsl(var(--primary-foreground));
+  --rk-colors-background: hsl(var(--background));
+  --rk-colors-backgroundSecondary: hsl(var(--secondary));
+  --rk-colors-foreground: hsl(var(--foreground));
+  --rk-colors-muted: hsl(var(--muted));
+  --rk-colors-mutedForeground: hsl(var(--muted-foreground));
+  --rk-colors-border: hsl(var(--border));
+  --rk-colors-input: hsl(var(--input));
+  --rk-colors-ring: hsl(var(--ring));
+  --rk-radius: var(--radius);
+}
+
+/* Ensure modal is properly layered */
+.rk-modal {
+  z-index: 50;
+}
+
+/* Fix any potential overflow issues */
+.rk-container {
+  overflow: visible;
+}

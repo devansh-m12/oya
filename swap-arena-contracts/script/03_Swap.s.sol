@@ -4,62 +4,82 @@ pragma solidity ^0.8.20;
 import "forge-std/Script.sol";
 import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
-import {PoolSwapTest} from "v4-core/src/test/PoolSwapTest.sol";
-import {TickMath} from "v4-core/src/libraries/TickMath.sol";
+import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {CurrencyLibrary, Currency} from "v4-core/src/types/Currency.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {TickMath} from "v4-core/src/libraries/TickMath.sol";
 
-import {Constants} from "./base/Constants.sol";
-import {Config} from "./base/Config.sol";
+interface IUnlockCallback {
+    function unlockCallback(bytes calldata data) external;
+}
 
-contract SwapScript is Script, Constants, Config {
-    // slippage tolerance to allow for unlimited price impact
-    uint160 public constant MIN_PRICE_LIMIT = TickMath.MIN_SQRT_PRICE + 1;
-    uint160 public constant MAX_PRICE_LIMIT = TickMath.MAX_SQRT_PRICE - 1;
+contract Swapper is IUnlockCallback {
+    IPoolManager public immutable poolManager;
+    using CurrencyLibrary for Currency;
 
-    /////////////////////////////////////
-    // --- Parameters to Configure --- //
-    /////////////////////////////////////
+    constructor(IPoolManager _poolManager) {
+        poolManager = _poolManager;
+    }
 
-    // PoolSwapTest Contract address, default to the anvil address
-    PoolSwapTest swapRouter = new PoolSwapTest(POOLMANAGER);
+    function swap(PoolKey calldata key, IPoolManager.SwapParams calldata params, bytes calldata hookData) external returns (BalanceDelta delta) {
+        bytes memory data = abi.encode(key, params, hookData);
+        poolManager.unlock(data);
+        return delta; // Delta is handled in callback
+    }
 
-    // --- pool configuration --- //
-    // fees paid by swappers that accrue to liquidity providers
-    uint24 lpFee = 3000; // 0.30%
-    int24 tickSpacing = 60;
+    function unlockCallback(bytes calldata data) external override {
+        require(msg.sender == address(poolManager), "Not PoolManager");
 
+        (PoolKey memory key, IPoolManager.SwapParams memory params, bytes memory hookData) = abi.decode(data, (PoolKey, IPoolManager.SwapParams, bytes));
+
+        BalanceDelta delta = poolManager.swap(key, params, hookData);
+
+        // Settle deltas
+        if (delta.amount0() < 0) {
+            key.currency0.transfer(address(poolManager), uint256(-delta.amount0()));
+        }
+        if (delta.amount1() < 0) {
+            key.currency1.transfer(address(poolManager), uint256(-delta.amount1()));
+        }
+
+        // Refund positive deltas
+        if (delta.amount0() > 0) {
+            key.currency0.transfer(msg.sender, uint256(delta.amount0()));
+        }
+        if (delta.amount1() > 0) {
+            key.currency1.transfer(msg.sender, uint256(delta.amount1()));
+        }
+    }
+}
+
+contract RealSwapScript is Script {
     function run() external {
-        PoolKey memory pool = PoolKey({
-            currency0: currency0,
-            currency1: currency1,
-            fee: lpFee,
-            tickSpacing: tickSpacing,
-            hooks: hookContract
+        vm.startBroadcast();
+
+        IPoolManager poolManager = IPoolManager(0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408);
+        Swapper swapper = new Swapper(poolManager);
+
+        PoolKey memory key = PoolKey({
+            currency0: Currency.wrap(0x39C51817f9F82244F36b23B9c2ec73bA895f89E7),
+            currency1: Currency.wrap(0x8A163E553b4c3bAFA610b83a3D564bF4ea3ACd57),
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: IHooks(0xc62a2207D15Dc7946e80694311767aE13d588040)
         });
 
-        // approve tokens to the swap router
-        vm.broadcast();
-        token0.approve(address(swapRouter), type(uint256).max);
-        vm.broadcast();
-        token1.approve(address(swapRouter), type(uint256).max);
+        // Approve tokens to PoolManager for settle
+        key.currency0.approve(address(poolManager), 1e18);
+        key.currency1.approve(address(poolManager), 1e18);
 
-        // ------------------------------ //
-        // Swap 100e18 token0 into token1 //
-        // ------------------------------ //
-        bool zeroForOne = false;
         IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
-            zeroForOne: zeroForOne,
-            amountSpecified: 100e18,
-            sqrtPriceLimitX96: zeroForOne ? MIN_PRICE_LIMIT : MAX_PRICE_LIMIT // unlimited impact
+            zeroForOne: true, // Swap token0 for token1 (buy)
+            amountSpecified: int256(1e18),
+            sqrtPriceLimitX96: TickMath.MIN_SQRT_RATIO + 1
         });
 
-        // in v4, users have the option to receieve native ERC20s or wrapped ERC1155 tokens
-        // here, we'll take the ERC20s
-        PoolSwapTest.TestSettings memory testSettings =
-            PoolSwapTest.TestSettings({takeClaims: false, settleUsingBurn: false});
+        bytes memory hookData = "";
+        swapper.swap(key, params, hookData);
 
-        bytes memory hookData = new bytes(0);
-        vm.broadcast();
-        swapRouter.swap(pool, params, testSettings, hookData);
+        vm.stopBroadcast();
     }
 }
