@@ -10,14 +10,13 @@ import {IPositionManager} from "v4-periphery/src/interfaces/IPositionManager.sol
 import {LiquidityAmounts} from "v4-core/test/utils/LiquidityAmounts.sol";
 import {TickMath} from "v4-core/src/libraries/TickMath.sol";
 import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
+import {Actions} from "v4-periphery/src/libraries/Actions.sol";
 
-import {EasyPosm} from "../test/utils/EasyPosm.sol";
 import {Constants} from "./base/Constants.sol";
 import {Config} from "./base/Config.sol";
 
 contract AddLiquidityScript is Script, Constants, Config {
     using CurrencyLibrary for Currency;
-    using EasyPosm for IPositionManager;
     using StateLibrary for IPoolManager;
 
     /////////////////////////////////////
@@ -30,8 +29,8 @@ contract AddLiquidityScript is Script, Constants, Config {
     int24 tickSpacing = 60;
 
     // --- liquidity position configuration --- //
-    uint256 public token0Amount = 5e15;
-    uint256 public token1Amount = 100e18;
+    uint256 public token0Amount = 1000e18;
+    uint256 public token1Amount = 1000e18;
 
     // range of the position
     int24 tickLower = -600; // must be a multiple of tickSpacing
@@ -69,8 +68,26 @@ contract AddLiquidityScript is Script, Constants, Config {
         vm.stopBroadcast();
 
         vm.startBroadcast();
-        IPositionManager(address(posm)).mint(
-            pool, tickLower, tickUpper, liquidity, amount0Max, amount1Max, 0x26d04a4c173b04a47Bb7ec74D3A2e97511aa7e26, block.timestamp + 60, hookData
+
+        // Mint additional tokens to deployer
+        address deployer = 0x26d04a4c173b04a47Bb7ec74D3A2e97511aa7e26;
+        (bool success0,) = Currency.unwrap(currency0).call(abi.encodeWithSignature("mint(address,uint256)", deployer, token0Amount));
+        require(success0, "Mint token0 failed");
+        (bool success1,) = Currency.unwrap(currency1).call(abi.encodeWithSignature("mint(address,uint256)", deployer, token1Amount));
+        require(success1, "Mint token1 failed");
+
+        tokenApprovals();
+        vm.stopBroadcast();
+
+        vm.startBroadcast();
+        // Remove unused variable
+        uint256 valueToPass = currency0.isAddressZero() ? amount0Max : 0;
+        bytes[] memory params = new bytes[](2);
+        params[0] = abi.encode(pool, tickLower, tickUpper, liquidity, amount0Max, amount1Max, 0x26d04a4c173b04a47Bb7ec74D3A2e97511aa7e26, hookData);
+        params[1] = abi.encode(currency0, currency1);
+        IPositionManager(address(posm)).modifyLiquidities{value: valueToPass}(
+            abi.encode(abi.encodePacked(uint8(Actions.MINT_POSITION), uint8(Actions.SETTLE_PAIR)), params),
+            block.timestamp + 60
         );
         vm.stopBroadcast();
     }

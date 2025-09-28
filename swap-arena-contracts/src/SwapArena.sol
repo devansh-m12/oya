@@ -150,7 +150,7 @@ contract SwapArena is BaseHook, Ownable{
             IPoolManager.SwapParams calldata,
             BalanceDelta delta,
             bytes calldata
-        ) internal override returns (bytes4, BalanceDelta) {
+        ) internal override returns (bytes4, int128) {
             uint40 currentTimeStamp = uint40(block.timestamp);
             uint40 poolIndex = currentPoolIndex[key.toId()];
 
@@ -179,11 +179,11 @@ contract SwapArena is BaseHook, Ownable{
                     currentTimeStamp,
                     currentTimeStamp + QUEST_DURATION
                 );
-                return (BaseHook.afterSwap.selector, BalanceDeltaLibrary.ZERO_DELTA);
+                return (BaseHook.afterSwap.selector, int128(0));
             }
 
             if (questTradeStats[key.toId()][poolIndex].endTime < currentTimeStamp) {
-                return (BaseHook.afterSwap.selector, BalanceDeltaLibrary.ZERO_DELTA);
+                return (BaseHook.afterSwap.selector, int128(0));
             }
 
             int256 delta0 = delta.amount0();
@@ -200,7 +200,7 @@ contract SwapArena is BaseHook, Ownable{
                 stats.totalVolumeOfBuys += uint128(uint256(delta1));
             }
 
-            return (BaseHook.afterSwap.selector, BalanceDeltaLibrary.ZERO_DELTA);
+            return (BaseHook.afterSwap.selector, int128(0));
         }
 
     // call functions

@@ -37,45 +37,27 @@ contract RealSwapScript is Script {
             hooks: IHooks(0x2Bf28F029258C7Fd57481eEeA1FA78662fb84040)
         });
 
-        // Initialize the pool with initial price (1:1 assuming 18 decimals for both tokens)
-        uint160 sqrtPriceX96 = 79228162514264337593543950336; // 2^96 for price = 1
-        poolManager.initialize(key, sqrtPriceX96);
-
         address token0Addr = Currency.unwrap(key.currency0);
         address token1Addr = Currency.unwrap(key.currency1);
 
-        // Mint tokens to deployer
-        (bool success0,) = token0Addr.call(abi.encodeWithSignature("mint(address,uint256)", deployer, 2 ether));
+        // Mint tokens to deployer for swap
+        (bool success0,) = token0Addr.call(abi.encodeWithSignature("mint(address,uint256)", deployer, 0.00001 ether));
         require(success0, "Mint token0 failed");
-        (bool success1,) = token1Addr.call(abi.encodeWithSignature("mint(address,uint256)", deployer, 2 ether));
+        (bool success1,) = token1Addr.call(abi.encodeWithSignature("mint(address,uint256)", deployer, 0 ether));
         require(success1, "Mint token1 failed");
 
-        // Approve tokens to Permit2 and then to posm
-        IERC20(token0Addr).approve(address(PERMIT2), type(uint256).max);
-        PERMIT2.approve(address(token0Addr), address(posm), type(uint160).max, type(uint48).max);
-        IERC20(token1Addr).approve(address(PERMIT2), type(uint256).max);
-        PERMIT2.approve(address(token1Addr), address(posm), type(uint160).max, type(uint48).max);
+        // The pool is already initialized, skip initialize
 
-        // Add liquidity
-        int24 tickLower = -60;
-        int24 tickUpper = 60;
-        uint256 amount0Desired = 1 ether;
-        uint256 amount1Desired = 1 ether;
-        uint160 sqrtLower = TickMath.getSqrtPriceAtTick(tickLower);
-        uint160 sqrtUpper = TickMath.getSqrtPriceAtTick(tickUpper);
-        uint128 liquidity = LiquidityAmounts.getLiquidityForAmounts(sqrtPriceX96, sqrtLower, sqrtUpper, amount0Desired, amount1Desired);
-        uint256 amount0Max = amount0Desired * 100 / 99;
-        uint256 amount1Max = amount1Desired * 100 / 99;
-        bytes memory emptyHookData = "";
-        bytes memory actions = abi.encodePacked(uint8(Actions.MINT_POSITION), uint8(Actions.SETTLE_PAIR));
-        bytes[] memory params = new bytes[](2);
-        params[0] = abi.encode(key, tickLower, tickUpper, liquidity, amount0Max, amount1Max, deployer, emptyHookData);
-        params[1] = abi.encode(key.currency0, key.currency1);
-        uint256 deadline = block.timestamp + 3600;
-        posm.modifyLiquidities(abi.encode(actions, params), deadline);
+        // Approve tokens to Permit2 and then to swapper
+        IERC20(token0Addr).approve(address(PERMIT2), type(uint256).max);
+        PERMIT2.approve(address(token0Addr), address(swapper), type(uint160).max, type(uint48).max);
+        IERC20(token1Addr).approve(address(PERMIT2), type(uint256).max);
+        PERMIT2.approve(address(token1Addr), address(swapper), type(uint160).max, type(uint48).max);
 
         // Transfer input tokens to swapper
-        IERC20(token0Addr).transfer(address(swapper), 0.000010031 ether);
+        IERC20(token0Addr).transfer(address(swapper), 0.00001 ether);
+
+        // Skip adding liquidity as it's already done
 
         IPoolManager.SwapParams memory swapParams = IPoolManager.SwapParams({
             zeroForOne: true, // Swap token0 for token1 (buy)
